@@ -5,3 +5,5 @@
 .ackvio-wordmark{font-size:30px;font-weight:750;letter-spacing:-.03em}.ackvio-wordmark span{display:block;margin-top:8px;font-size:11px;font-weight:600;letter-spacing:.13em;color:#9cb9cd}
 .ackvio-copy h2{margin-top:20px}.ackvio-copy>p:not(.eyebrow):not(.ackvio-wordmark){max-width:540px}.ackvio-copy .button{margin-top:16px}.ackvio-benefits{display:grid;gap:16px;align-content:center}.ackvio-benefits article{padding:20px;border:1px solid #365064;border-radius:16px;background:#ffffff05}.ackvio-benefits article>span{color:#81e5cf;font-size:22px}.ackvio-benefits h3{margin:8px 0}.ackvio-benefits p{margin:0;color:#b4c6d4}
 @media(max-width:760px){.ackvio-promo{grid-template-columns:1fr;gap:24px;padding:24px}.ackvio-wordmark{font-size:27px}}
+
+.ackvio-promo{color:#f2f7fa}.ackvio-promo h2,.ackvio-promo h3,.ackvio-wordmark{color:#f2f7fa}.ackvio-copy>p,.ackvio-copy .fine{color:#b4c6d4}.ackvio-promo .eyebrow{color:#81e5cf}.ackvio-promo .button{background:#81e5cf;color:#102531}
