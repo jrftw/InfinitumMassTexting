@@ -12,10 +12,41 @@ async function json(url,body,token){
  if(!response.ok)throw new Error(typeof data.error==='string'?data.error:data.error?.message??'Could not complete this request.');return data;
 }
 async function auth(method,body){config??=await json('/__/firebase/init.json');return json('https://identitytoolkit.googleapis.com/v1/accounts:'+method+'?key='+encodeURIComponent(config.apiKey),body);}
-function save(){if(session)sessionStorage.setItem('infinitum-session',JSON.stringify(session));else sessionStorage.removeItem('infinitum-session');display();}
+// MARK: - Durable browser sign-in, independent of website release versions
+const sessionKey='infinitum-session';
+let sessionGeneration=0;
+function loadSession(){
+ try {
+  const raw=localStorage.getItem(sessionKey)??sessionStorage.getItem(sessionKey);
+  const value=JSON.parse(raw??'null');
+  if(!value||typeof value.email!=='string'||typeof value.refreshToken!=='string'||!value.refreshToken)return null;
+  // Migrate an existing tab sign-in without asking for the password again.
+  localStorage.setItem(sessionKey,JSON.stringify(value));sessionStorage.removeItem(sessionKey);
+  return value;
+ } catch { return null; }
+}
+function save(){
+ try {
+  if(session)localStorage.setItem(sessionKey,JSON.stringify(session));else localStorage.removeItem(sessionKey);
+  sessionStorage.removeItem(sessionKey);
+ } catch { status('Your browser could not save this sign-in. Allow site storage to stay signed in after closing the browser.'); }
+ display();
+}
+function clearSession(){
+ sessionGeneration++;session=null;selectedUser=null;latestAccess=null;enrollmentComplete=false;refreshPromise=null;
+ if($('admin-panel'))$('admin-panel').hidden=true;
+ save();
+}
+window.addEventListener('storage',event=>{
+ if(event.key!==sessionKey&&event.key!==null)return;
+ let next=null;try{next=JSON.parse(event.newValue??'null');}catch{}
+ if(!next||next.email!==session?.email){location.reload();return;}
+ // Same account refreshed in another tab: adopt it without a reload/refresh loop.
+ session=next;
+});
 async function token(force=false){
  if(!session)throw new Error('Sign in first.');if(!force&&session.expires>Date.now())return session.idToken;
- if(!refreshPromise)refreshPromise=(async()=>{config??=await json('/__/firebase/init.json');const response=await fetch('https://securetoken.googleapis.com/v1/token?key='+encodeURIComponent(config.apiKey),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:session.refreshToken})});const d=await response.json();if(!response.ok)throw new Error('Sign in again to continue.');session={...session,idToken:d.id_token,refreshToken:d.refresh_token,expires:Date.now()+3300000};save();return session.idToken;})().finally(()=>{refreshPromise=null;});
+ if(!refreshPromise){const generation=sessionGeneration,refreshCredential=session.refreshToken;refreshPromise=(async()=>{config??=await json('/__/firebase/init.json');const response=await fetch('https://securetoken.googleapis.com/v1/token?key='+encodeURIComponent(config.apiKey),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:refreshCredential})});const d=await response.json();if(generation!==sessionGeneration)throw new Error('Sign-in changed. Please try again.');if(!response.ok){if(['TOKEN_EXPIRED','INVALID_REFRESH_TOKEN','USER_DISABLED','USER_NOT_FOUND'].includes(d.error?.message)){clearSession();throw new Error('Your saved sign-in is no longer valid. Please sign in again.');}throw new Error('Could not refresh your account. Your sign-in is saved; please try again.');}session={...session,idToken:d.id_token,refreshToken:d.refresh_token,expires:Date.now()+3300000};save();return session.idToken;})().finally(()=>{if(generation===sessionGeneration)refreshPromise=null;});}
  return refreshPromise;
 }
 async function api(path,body){return json('/api'+path,body,await token());}
@@ -26,11 +57,11 @@ $('profile-form').addEventListener('submit',e=>{e.preventDefault();if(!session)r
 async function refresh(){await token(true);if(!await enrollmentStatus()){status('Complete your account details and review the agreements below.');return;}const a=await api('/account');latestAccess=a;$('plan-status').textContent=a.limit===null?(a.plan==='complimentary'?'Complimentary · no app sending cap':'Unlimited · no app sending cap'):a.plan.toUpperCase()+' · '+a.remaining+' of '+a.limit+' credits available';$('usage-status').textContent=a.used+' used · '+a.reserved+' reserved. Resets '+new Date(a.resetsAt).toLocaleString()+' (midnight UTC).';$('admin-link').hidden=!a.admin;if($('admin-panel'))$('admin-panel').hidden=!a.admin;document.querySelectorAll('[data-checkout]').forEach(b=>{b.disabled=a.premium;});status(a.admin?'Owner access verified. Your account is complimentary.':'Account updated.');}
 async function action(fn){const buttons=[...document.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);try{await fn();}catch(error){status(error.message);}finally{buttons.forEach(b=>b.disabled=false);document.querySelectorAll('[data-checkout]').forEach(b=>{b.disabled=latestAccess?.premium===true;});if($('referral-payout'))$('referral-payout').disabled=!referralCanRequest;}}
 $('create').addEventListener('change',()=>{$('profile-panel').hidden=!$('create').checked;$('sign-in').hidden=$('create').checked;$('save-profile').hidden=true;$('sign-in').textContent=$('create').checked?'Create free account':'Sign in';$('password').autocomplete=$('create').checked?'new-password':'current-password';});
-$('auth-form').addEventListener('submit',e=>{e.preventDefault();action(async()=>{const create=$('create').checked;const details=create?profileData():null;const email=$('email').value.trim(),password=$('password').value;$('password').value='';const d=await auth(create?'signUp':'signInWithPassword',{email,password,returnSecureToken:true});session={email:d.email??email,idToken:d.idToken,refreshToken:d.refreshToken,expires:Date.now()+3300000};save();if(create){$('profile-panel').hidden=false;$('save-profile').hidden=false;await api('/enrollment',details);await enrollmentStatus();await auth('sendOobCode',{requestType:'VERIFY_EMAIL',idToken:d.idToken});status('Verification email sent. Open its link, then choose Refresh account.');}else await refresh();});});
+$('auth-form').addEventListener('submit',e=>{e.preventDefault();action(async()=>{const create=$('create').checked;const details=create?profileData():null;const email=$('email').value.trim(),password=$('password').value;$('password').value='';const d=await auth(create?'signUp':'signInWithPassword',{email,password,returnSecureToken:true});sessionGeneration++;session={email:d.email??email,idToken:d.idToken,refreshToken:d.refreshToken,expires:Date.now()+3300000};save();if(create){$('profile-panel').hidden=false;$('save-profile').hidden=false;await api('/enrollment',details);await enrollmentStatus();await auth('sendOobCode',{requestType:'VERIFY_EMAIL',idToken:d.idToken});status('Verification email sent. Open its link, then choose Refresh account.');}else await refresh();});});
 $('reset').addEventListener('click',()=>action(async()=>{const email=$('email').value.trim();if(!email)throw new Error('Enter your email address first.');try{await auth('sendOobCode',{requestType:'PASSWORD_RESET',email});}catch{}status('If that account exists, a password-reset email will arrive shortly.');}));
 $('verify').addEventListener('click',()=>action(async()=>{await auth('sendOobCode',{requestType:'VERIFY_EMAIL',idToken:await token()});status('Verification email sent.');}));
 $('refresh').addEventListener('click',()=>action(refresh));
-$('sign-out').addEventListener('click',()=>{session=null;selectedUser=null;latestAccess=null;enrollmentComplete=false;referralCanRequest=false;if($('referral-accept'))$('referral-accept').checked=false;if($('referral-link'))$('referral-link').value='';if($('referral-balance'))$('referral-balance').textContent='Sign in to view your earnings.';if($('referral-payout'))$('referral-payout').disabled=true;save();$('profile-panel').hidden=!$('create').checked;$('sign-in').hidden=$('create').checked;$('save-profile').hidden=true;if($('admin-panel'))$('admin-panel').hidden=true;status('Signed out of this browser. Your Mac app session is separate.');});
+$('sign-out').addEventListener('click',()=>{clearSession();referralCanRequest=false;if($('referral-accept'))$('referral-accept').checked=false;if($('referral-link'))$('referral-link').value='';if($('referral-balance'))$('referral-balance').textContent='Sign in to view your earnings.';if($('referral-payout'))$('referral-payout').disabled=true;save();$('profile-panel').hidden=!$('create').checked;$('sign-in').hidden=$('create').checked;$('save-profile').hidden=true;if($('admin-panel'))$('admin-panel').hidden=true;status('Signed out of this browser. Your Mac app session is separate.');});
 function billingURL(value){const url=new URL(value);if(url.protocol!=='https:'||!['checkout.stripe.com','billing.stripe.com'].includes(url.hostname))throw new Error('Unexpected checkout address.');return url.href;}
 document.querySelectorAll('[data-checkout]').forEach(b=>b.addEventListener('click',()=>action(async()=>{const d=await api('/billing/checkout',{interval:b.dataset.checkout,tier:b.dataset.tier??'pro'});window.location.assign(billingURL(d.url));})));
 $('portal').addEventListener('click',()=>action(async()=>{const d=await api('/billing/portal',{});window.location.assign(billingURL(d.url));}));
@@ -39,7 +70,12 @@ if($('search-form')){
  async function grant(enabled){if(!selectedUser)throw new Error('Select an account first.');const reason=$('grant-reason').value.trim();if(reason.length<3)throw new Error('Enter a reason for the audit log.');const date=$('grant-expiry').value;const expiresAt=date?new Date(date+'T23:59:59Z').getTime():null;await api('/admin/grant',{uid:selectedUser.uid,enabled,reason,expiresAt});status((enabled?'Unlimited app access granted to ':'Complimentary access revoked for ')+selectedUser.email+'. The change is recorded in the audit log.');}
  $('grant-form').addEventListener('submit',e=>{e.preventDefault();action(()=>grant(true));});$('revoke').addEventListener('click',()=>action(()=>grant(false)));
 }
-try{session=JSON.parse(sessionStorage.getItem('infinitum-session')??'null');}catch{session=null;}if(hostedAccount){display();if(session)action(refresh);}
+session=loadSession();if(hostedAccount){display();if(session)action(refresh);}
+let lastAutoRefresh=Date.now();
+function refreshOnReturn(){if(hostedAccount&&session&&!document.hidden&&Date.now()-lastAutoRefresh>30000){lastAutoRefresh=Date.now();action(refresh);}}
+window.addEventListener('focus',refreshOnReturn);
+window.addEventListener('online',()=>{lastAutoRefresh=0;refreshOnReturn();});
+document.addEventListener('visibilitychange',refreshOnReturn);
 
 // MARK: - Referrals; all balances and thresholds are enforced by the server
 let referralCanRequest=false;
