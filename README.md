@@ -4,11 +4,13 @@ Official website: https://infinitummasstexting.web.app/
 
 Download: https://github.com/jrftw/InfinitumMassTexting/releases/latest
 
-Native macOS app from Infinitum Imagery LLC. Three independent campaigns, a shared Messages queue, optional contacts, personalized variations, dry runs, local audit history and opt-outs. macOS 14+, Intel and Apple silicon.
+Version **1.0.6 Build 1**. Native macOS app from Infinitum Imagery LLC. Three independent campaigns, a shared Messages queue, optional contacts, personalized variations, dry runs, local audit history and opt-outs. macOS 14+, Intel and Apple silicon.
 
 ## Install
 
 Download only **InfinitumMassTexting-macOS.zip**. Pause/finish campaigns and quit the old app. Double-click the ZIP in Downloads, drag InfinitumMassTexting.app to Applications, choose Replace and open it there. Existing data stays on your Mac; unfinished campaigns remain paused.
+
+Create and verify your free account on the website, then sign in through **Account & Plan** in the app. Free includes 25 live-send credits per calendar month. Pro includes 2,500 monthly credits, scheduling, three campaigns and multiple variations. Dry Run sends nothing and uses no credits.
 
 Full instructions: https://infinitummasstexting.web.app/install.html
 
