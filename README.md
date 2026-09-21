@@ -4,7 +4,7 @@ Official website: https://infinitummasstexting.web.app/
 
 Download: https://github.com/jrftw/InfinitumMassTexting/releases/latest
 
-Version **1.0.6 Build 1**. Native macOS app from Infinitum Imagery LLC. Three independent campaigns, a shared Messages queue, optional contacts, personalized variations, dry runs, local audit history and opt-outs. macOS 14+, Intel and Apple silicon.
+Version **1.0.7 Build 1**. Native macOS app from Infinitum Imagery LLC. Three independent campaigns, a shared Messages queue, optional contacts, personalized variations, dry runs, local audit history and opt-outs. macOS 14+, Intel and Apple silicon.
 
 ## Install
 
