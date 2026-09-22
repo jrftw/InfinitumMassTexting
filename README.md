@@ -26,7 +26,7 @@ Copyright © 2026 Infinitum Imagery LLC. All rights reserved.
 
 Version 1.0.8 adds device-only templates with up to 10 variations, copy/personalize actions, guided manual delivery review and automatic saved-account refresh. See the release notes for installation instructions and verification limits.
 
-Build 2 adds arbitrary CSV header placeholders, preserved custom contact fields, and Clear Recipient List for editable drafts. Currently available: Free (25 monthly credits) and Pro (2,500). Business, Scale and Unlimited are prepared but are not yet enabled for new purchases. Provider restrictions and safety controls apply to every plan.
+Build 2 adds arbitrary CSV header placeholders, preserved custom contact fields, and Clear Recipient List for editable drafts. Plans: Free (25 monthly credits), Pro (2,500), Business (10,000), Scale (30,000), and Unlimited (no monthly app credit cap). Provider restrictions and safety controls apply to every plan.
 
 ## New in 1.0.9 Build 1
 
