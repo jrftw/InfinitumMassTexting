@@ -4,7 +4,7 @@ Official website: https://infinitummasstexting.web.app/
 
 Download: https://github.com/jrftw/InfinitumMassTexting/releases/latest
 
-Version **1.0.8 Build 2**. Native macOS app from Infinitum Imagery LLC. Three independent campaigns, a shared Messages queue, optional contacts, personalized variations, dry runs, local audit history and opt-outs. macOS 14+, Intel and Apple silicon.
+Version **1.0.9 Build 1**. Native macOS app from Infinitum Imagery LLC. Three independent campaigns, a shared Messages queue, optional contacts, personalized variations, dry runs, local audit history and opt-outs. macOS 14+, Intel and Apple silicon.
 
 ## Install
 
@@ -27,3 +27,9 @@ Copyright © 2026 Infinitum Imagery LLC. All rights reserved.
 Version 1.0.8 adds device-only templates with up to 10 variations, copy/personalize actions, guided manual delivery review and automatic saved-account refresh. See the release notes for installation instructions and verification limits.
 
 Build 2 adds arbitrary CSV header placeholders, preserved custom contact fields, and Clear Recipient List for editable drafts. Plans: Free (25 monthly credits), Pro (2,500), Business (10,000), Scale (30,000), and Unlimited (no monthly app credit cap). Provider restrictions and safety controls apply to every plan.
+
+## New in 1.0.9 Build 1
+
+Refreshed campaign navigation and cards, Auto/Light/Dark, four theme presets and a custom accent. Solid surfaces, stronger borders and reduced motion. Liquid Glass navigation on macOS 26+, native material fallback on macOS 14/15.
+
+English plus 23 language previews translate navigation/common controls; Arabic and Hebrew use right-to-left layout. Other screens and safety guidance still use English. Full translation is not yet available. Message contents and CSV field names never change with the interface language.
